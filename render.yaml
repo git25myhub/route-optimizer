@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: route-optimizer-api
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: PYTHON_VERSION
+        value: 3.11.0
+
+databases:
+  - name: route-optimizer-db
+    databaseName: route_optimizer
+    user: route_optimizer_user
+    plan: free
