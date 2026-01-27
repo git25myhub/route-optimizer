@@ -57,7 +57,7 @@ function RouteHistory({ apiUrl, onClose }) {
             >
               <div className="history-item-header">
                 <span className="route-id">#{route.id}</span>
-                <span className={`algorithm-badge algorithm-${route.algorithm}`}>
+                <span className={`algorithm-badge algorithm-${route.algorithm.replace('*', 'star')}`}>
                   {route.algorithm.toUpperCase()}
                 </span>
               </div>
