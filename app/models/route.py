@@ -11,4 +11,5 @@ class Route(Base):
     distance_km = Column(Float, nullable=False)
     execution_time_ms = Column(Float, nullable=False)
     path = Column(JSON, nullable=False)  # Store the optimized path as JSON
+    geometry = Column(JSON, nullable=True)  # Road path polyline [lat,lng] when mode=drive
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

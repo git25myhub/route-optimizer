@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List
+from typing import List, Optional
 
 class Location(BaseModel):
     lat: float = Field(..., description="Latitude in degrees", example=40.7128)
@@ -16,7 +16,12 @@ class Location(BaseModel):
 class RouteRequest(BaseModel):
     locations: List[Location] = Field(..., description="List of locations to optimize")
     algorithm: str = Field(..., description="Algorithm to use: 'dijkstra' or 'astar'", example="dijkstra")
-    
+    mode: str = Field(
+        default="straight",
+        description="Routing mode: 'straight' (as-the-crow-flies) or 'drive' (road network via OSRM)",
+        example="drive",
+    )
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -25,15 +30,20 @@ class RouteRequest(BaseModel):
                     {"lat": 34.0522, "lng": -118.2437},
                     {"lat": 41.8781, "lng": -87.6298}
                 ],
-                "algorithm": "dijkstra"
+                "algorithm": "dijkstra",
+                "mode": "drive"
             }
         }
 
 class RouteResponse(BaseModel):
-    path: List[Location] = Field(..., description="Optimized route path")
+    path: List[Location] = Field(..., description="Optimized route path (stop order)")
     distance_km: float = Field(..., description="Total distance in kilometers", example=3944.123)
     execution_time_ms: float = Field(..., description="Algorithm execution time in milliseconds", example=2.456)
-    
+    geometry: Optional[List[List[float]]] = Field(
+        default=None,
+        description="Road path as list of [lat, lng] (only when mode=drive); draw this for map",
+    )
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -43,6 +53,7 @@ class RouteResponse(BaseModel):
                     {"lat": 34.0522, "lng": -118.2437}
                 ],
                 "distance_km": 3944.123,
-                "execution_time_ms": 2.456
+                "execution_time_ms": 2.456,
+                "geometry": [[40.7128, -74.006], [40.72, -74.01], [41.8781, -87.6298]]
             }
         }

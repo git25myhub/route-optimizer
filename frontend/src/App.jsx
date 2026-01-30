@@ -19,7 +19,7 @@ function App() {
     setError(null)
   }
 
-  const handleOptimize = async (algorithm) => {
+  const handleOptimize = async (algorithm, mode = 'drive') => {
     if (locations.length < 2) {
       setError('Please add at least 2 locations on the map')
       return
@@ -37,12 +37,16 @@ function App() {
         body: JSON.stringify({
           locations,
           algorithm,
+          mode: mode || 'drive',
         }),
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.detail || 'Failed to optimize route')
+        const errorData = await response.json().catch(() => ({}))
+        const msg = Array.isArray(errorData.detail)
+          ? errorData.detail.map((d) => d.msg || d.message).join(', ')
+          : (errorData.detail?.message || errorData.detail || 'Failed to optimize route')
+        throw new Error(msg)
       }
 
       const data = await response.json()

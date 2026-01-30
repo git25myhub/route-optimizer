@@ -98,14 +98,18 @@ function MapComponent({ locations, optimizedRoute, onMapClick, onRemoveLocation 
         </Marker>
       ))}
 
-      {/* Optimized route path */}
+      {/* Optimized route path: use road geometry when available, else straight segments */}
       {optimizedRoute && optimizedRoute.path && optimizedRoute.path.length > 1 && (
         <>
           <Polyline
-            positions={optimizedRoute.path.map(loc => [loc.lat, loc.lng])}
-            color="blue"
-            weight={4}
-            opacity={0.7}
+            positions={
+              optimizedRoute.geometry && optimizedRoute.geometry.length > 0
+                ? optimizedRoute.geometry.map(coord => [coord[0], coord[1]])
+                : optimizedRoute.path.map(loc => [loc.lat, loc.lng])
+            }
+            color={optimizedRoute.geometry ? '#2563eb' : 'blue'}
+            weight={optimizedRoute.geometry ? 5 : 4}
+            opacity={0.8}
           />
           {optimizedRoute.path.map((loc, index) => (
             <Marker

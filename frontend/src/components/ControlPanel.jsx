@@ -11,6 +11,7 @@ function ControlPanel({
   onShowHistory,
 }) {
   const [selectedAlgorithm, setSelectedAlgorithm] = useState('dijkstra')
+  const [selectedMode, setSelectedMode] = useState('drive')
 
   return (
     <div className="control-panel">
@@ -30,6 +31,30 @@ function ControlPanel({
             ))}
           </div>
         )}
+      </div>
+
+      <div className="panel-section">
+        <h2>🛣️ Routing</h2>
+        <div className="algorithm-selector">
+          <label>
+            <input
+              type="radio"
+              value="drive"
+              checked={selectedMode === 'drive'}
+              onChange={(e) => setSelectedMode(e.target.value)}
+            />
+            Drive (roads)
+          </label>
+          <label>
+            <input
+              type="radio"
+              value="straight"
+              checked={selectedMode === 'straight'}
+              onChange={(e) => setSelectedMode(e.target.value)}
+            />
+            Straight line
+          </label>
+        </div>
       </div>
 
       <div className="panel-section">
@@ -59,7 +84,7 @@ function ControlPanel({
       <div className="panel-section">
         <button
           className="btn-optimize"
-          onClick={() => onOptimize(selectedAlgorithm)}
+          onClick={() => onOptimize(selectedAlgorithm, selectedMode)}
           disabled={isLoading || locations.length < 2}
         >
           {isLoading ? '⏳ Optimizing...' : '🚀 Optimize Route'}

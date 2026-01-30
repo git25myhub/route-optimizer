@@ -140,7 +140,7 @@ postgresql://user:password@dpg-xxxxx-a/route_optimizer
    https://route-optimizer-api.onrender.com/docs
    ```
 
-4. **Test Route Optimization:**
+4. **Test Route Optimization (drive mode = real roads):**
    ```bash
    curl -X POST "https://route-optimizer-api.onrender.com/routes/optimize" \
      -H "Content-Type: application/json" \
@@ -149,9 +149,11 @@ postgresql://user:password@dpg-xxxxx-a/route_optimizer
          {"lat": 40.7128, "lng": -74.0060},
          {"lat": 34.0522, "lng": -118.2437}
        ],
-       "algorithm": "dijkstra"
+       "algorithm": "dijkstra",
+       "mode": "drive"
      }'
    ```
+   Response includes `geometry` (road path) when `mode=drive`.
 
 **✅ Checkpoint:** API is working!
 
@@ -169,6 +171,16 @@ postgresql://user:password@dpg-xxxxx-a/route_optimizer
    ```python
    allow_origins=[os.getenv("FRONTEND_URL", "*")]
    ```
+
+### Database: New `geometry` column (if you already had the app deployed)
+
+If your `routes` table was created before road routing was added, add the new column:
+
+```sql
+ALTER TABLE routes ADD COLUMN IF NOT EXISTS geometry JSON;
+```
+
+(PostgreSQL 9.5+ supports `IF NOT EXISTS` for ADD COLUMN; otherwise omit it and run `ALTER TABLE routes ADD COLUMN geometry JSON;` once.)
 
 ### Set Up Health Check (Optional)
 
