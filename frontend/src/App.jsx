@@ -21,10 +21,15 @@ function App() {
   }, [start, destinations])
 
   const handleMapClick = (lat, lng) => {
-    setDestinations([...destinations, { lat, lng }])
+    const point = { lat, lng }
     setOptimizedRoute(null)
     setError(null)
-    setFlyTo({ lat, lng })
+    if (!start) {
+      setStart(point)
+    } else {
+      setDestinations([...destinations, point])
+    }
+    // No flyTo: user controls zoom when adding by map click
   }
 
   const handleSetStart = (place) => {
@@ -35,10 +40,15 @@ function App() {
   }
 
   const handleAddDestination = (place) => {
-    setDestinations([...destinations, place])
+    const newDestinations = [...destinations, place]
+    setDestinations(newDestinations)
     setOptimizedRoute(null)
     setError(null)
-    setFlyTo(place)
+    // Zoom out to show full path (start + all destinations)
+    const points = start
+      ? [[start.lat, start.lng], ...newDestinations.map((d) => [d.lat, d.lng])]
+      : newDestinations.map((d) => [d.lat, d.lng])
+    if (points.length > 0) setFlyTo({ type: 'bounds', points })
   }
 
   const handleRemoveDestination = (index) => {

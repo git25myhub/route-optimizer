@@ -1,4 +1,5 @@
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMapEvents, useMap } from 'react-leaflet'
+import L from 'leaflet'
 import { Icon } from 'leaflet'
 import { useEffect } from 'react'
 import 'leaflet/dist/leaflet.css'
@@ -24,9 +25,17 @@ function FlyToView({ flyTo, onFlyToDone }) {
   const map = useMap()
   useEffect(() => {
     if (!flyTo) return
-    map.flyTo([flyTo.lat, flyTo.lng], 15, { duration: 0.8 })
-    const t = setTimeout(onFlyToDone, 900)
-    return () => clearTimeout(t)
+    if (flyTo.type === 'bounds' && flyTo.points && flyTo.points.length > 0) {
+      const bounds = L.latLngBounds(flyTo.points)
+      map.fitBounds(bounds, { padding: [60, 60], maxZoom: 14 })
+      const t = setTimeout(onFlyToDone, 300)
+      return () => clearTimeout(t)
+    }
+    if (flyTo.lat != null && flyTo.lng != null) {
+      map.flyTo([flyTo.lat, flyTo.lng], 15, { duration: 0.8 })
+      const t = setTimeout(onFlyToDone, 900)
+      return () => clearTimeout(t)
+    }
   }, [flyTo, map, onFlyToDone])
   return null
 }
