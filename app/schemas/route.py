@@ -17,8 +17,8 @@ class RouteRequest(BaseModel):
     locations: List[Location] = Field(..., description="List of locations to optimize")
     algorithm: str = Field(..., description="Algorithm to use: 'dijkstra' or 'astar'", example="dijkstra")
     mode: str = Field(
-        default="straight",
-        description="Routing mode: 'straight' (as-the-crow-flies) or 'drive' (road network via OSRM)",
+        default="drive",
+        description="Routing mode: 'drive' (road network via OSRM) or 'straight' (as-the-crow-flies)",
         example="drive",
     )
 

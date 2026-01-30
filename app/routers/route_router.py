@@ -71,7 +71,7 @@ def optimize_route(data: RouteRequest, db: Session = Depends(get_db)):
     """
     start = time.time()
     locations_dict = [loc.dict() for loc in data.locations]
-    mode = (data.mode or "straight").strip().lower()
+    mode = (data.mode or "drive").strip().lower()
     algorithm_name = data.algorithm.lower()
 
     if mode == "drive":
