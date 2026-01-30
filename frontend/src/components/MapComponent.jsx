@@ -1,4 +1,4 @@
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMapEvents } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMapEvents, useMap } from 'react-leaflet'
 import { Icon } from 'leaflet'
 import { useEffect } from 'react'
 import 'leaflet/dist/leaflet.css'
@@ -20,27 +20,20 @@ function MapClickHandler({ onMapClick }) {
   return null
 }
 
-function MapComponent({ locations, optimizedRoute, onMapClick, onRemoveLocation }) {
+function FlyToView({ flyTo, onFlyToDone }) {
+  const map = useMap()
+  useEffect(() => {
+    if (!flyTo) return
+    map.flyTo([flyTo.lat, flyTo.lng], 15, { duration: 0.8 })
+    const t = setTimeout(onFlyToDone, 900)
+    return () => clearTimeout(t)
+  }, [flyTo, map, onFlyToDone])
+  return null
+}
+
+function MapComponent({ start, destinations, locations, optimizedRoute, onMapClick, onRemoveDestination, flyTo, onFlyToDone }) {
   const defaultCenter = [40.7128, -74.0060] // New York
   const defaultZoom = 3
-
-  // Calculate map bounds to fit all locations
-  useEffect(() => {
-    if (locations.length > 0 || (optimizedRoute && optimizedRoute.path)) {
-      const allPoints = optimizedRoute?.path || locations
-      if (allPoints.length > 0) {
-        const bounds = allPoints.map(loc => [loc.lat, loc.lng])
-        // Map will auto-fit bounds via Polyline component
-      }
-    }
-  }, [locations, optimizedRoute])
-
-  const getMarkerColor = (index, isOptimized) => {
-    if (isOptimized) {
-      return index === 0 ? 'green' : index === (optimizedRoute.path.length - 1) ? 'red' : 'blue'
-    }
-    return 'gray'
-  }
 
   const createCustomIcon = (color) => {
     return new Icon({
@@ -65,22 +58,35 @@ function MapComponent({ locations, optimizedRoute, onMapClick, onRemoveLocation 
       />
 
       <MapClickHandler onMapClick={onMapClick} />
+      {flyTo && onFlyToDone && <FlyToView flyTo={flyTo} onFlyToDone={onFlyToDone} />}
 
-      {/* Original locations */}
-      {locations.map((loc, index) => (
+      {/* Start marker */}
+      {start && (
+        <Marker key="start" position={[start.lat, start.lng]} icon={createCustomIcon('green')}>
+          <Popup>
+            <div>
+              <strong>🟢 Start</strong>
+              <br />
+              {start.displayName || `${start.lat.toFixed(4)}, ${start.lng.toFixed(4)}`}
+            </div>
+          </Popup>
+        </Marker>
+      )}
+      {/* Destination markers */}
+      {destinations.map((loc, index) => (
         <Marker
-          key={`original-${index}`}
+          key={`dest-${index}`}
           position={[loc.lat, loc.lng]}
-          icon={createCustomIcon('grey')}
+          icon={createCustomIcon(index === destinations.length - 1 ? 'red' : 'blue')}
         >
           <Popup>
             <div>
-              <strong>Location {index + 1}</strong>
+              <strong>{index === destinations.length - 1 ? '🔴 Destination' : `Stop ${index + 1}`}</strong>
               <br />
-              Lat: {loc.lat.toFixed(4)}, Lng: {loc.lng.toFixed(4)}
+              {loc.displayName || `${loc.lat.toFixed(4)}, ${loc.lng.toFixed(4)}`}
               <br />
               <button
-                onClick={() => onRemoveLocation(index)}
+                onClick={() => onRemoveDestination(index)}
                 style={{
                   marginTop: '5px',
                   padding: '3px 8px',

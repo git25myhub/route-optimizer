@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import MapComponent from './components/MapComponent'
 import ControlPanel from './components/ControlPanel'
 import RouteHistory from './components/RouteHistory'
@@ -7,21 +7,48 @@ import './App.css'
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
 
 function App() {
-  const [locations, setLocations] = useState([])
+  const [start, setStart] = useState(null)
+  const [destinations, setDestinations] = useState([])
   const [optimizedRoute, setOptimizedRoute] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
   const [showHistory, setShowHistory] = useState(false)
+  const [flyTo, setFlyTo] = useState(null)
+
+  const locations = useMemo(() => {
+    if (!start) return []
+    return [{ ...start }, ...destinations]
+  }, [start, destinations])
 
   const handleMapClick = (lat, lng) => {
-    const newLocation = { lat, lng }
-    setLocations([...locations, newLocation])
+    setDestinations([...destinations, { lat, lng }])
+    setOptimizedRoute(null)
     setError(null)
+    setFlyTo({ lat, lng })
+  }
+
+  const handleSetStart = (place) => {
+    setStart(place)
+    setOptimizedRoute(null)
+    setError(null)
+    if (place && place.lat != null) setFlyTo({ lat: place.lat, lng: place.lng })
+  }
+
+  const handleAddDestination = (place) => {
+    setDestinations([...destinations, place])
+    setOptimizedRoute(null)
+    setError(null)
+    setFlyTo(place)
+  }
+
+  const handleRemoveDestination = (index) => {
+    setDestinations(destinations.filter((_, i) => i !== index))
+    setOptimizedRoute(null)
   }
 
   const handleOptimize = async (algorithm, mode = 'drive') => {
-    if (locations.length < 2) {
-      setError('Please add at least 2 locations on the map')
+    if (!start || destinations.length === 0) {
+      setError('Set a start point and at least one destination.')
       return
     }
 
@@ -31,9 +58,7 @@ function App() {
     try {
       const response = await fetch(`${API_BASE_URL}/routes/optimize`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           locations,
           algorithm,
@@ -60,36 +85,40 @@ function App() {
   }
 
   const handleClear = () => {
-    setLocations([])
+    setStart(null)
+    setDestinations([])
     setOptimizedRoute(null)
     setError(null)
-  }
-
-  const handleRemoveLocation = (index) => {
-    setLocations(locations.filter((_, i) => i !== index))
-    setOptimizedRoute(null)
   }
 
   return (
     <div className="app">
       <header className="app-header">
         <h1>🗺️ Route Optimizer</h1>
-        <p>Click on the map to add locations, then optimize your route</p>
+        <p>Set start and destination, then optimize your route</p>
       </header>
 
       <div className="app-container">
         <div className="map-section">
           <MapComponent
+            start={start}
+            destinations={destinations}
             locations={locations}
             optimizedRoute={optimizedRoute}
             onMapClick={handleMapClick}
-            onRemoveLocation={handleRemoveLocation}
+            onRemoveDestination={handleRemoveDestination}
+            flyTo={flyTo}
+            onFlyToDone={() => setFlyTo(null)}
           />
         </div>
 
         <div className="sidebar">
           <ControlPanel
-            locations={locations}
+            start={start}
+            destinations={destinations}
+            setStart={handleSetStart}
+            addDestination={handleAddDestination}
+            removeDestination={handleRemoveDestination}
             optimizedRoute={optimizedRoute}
             isLoading={isLoading}
             error={error}
